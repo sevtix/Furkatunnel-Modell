@@ -2,6 +2,8 @@
 Adafruit_NeoPixel lichtsignale = Adafruit_NeoPixel(13, 3, NEO_GRB + NEO_KHZ800);
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(194, 5, NEO_GRB + NEO_KHZ800);
 
+float MULTIPLIER = 0.0f;
+
 byte cor[] = {
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
@@ -23,21 +25,10 @@ byte cor[] = {
 
 byte GLOBAL_DELAY = 12;
 
-float MULTIPLIER = 0.0f;
 byte MULTIPLIER_TIMESTAMP = 0L;
 
-long timestamp_lichtsignale = 0L;
-
-long TIMESTAMP_STROMABSCHNITT_1 = 2L;
-long TIMESTAMP_STROMABSCHNITT_2 = 4L;
-
-long TIMESTAMP_BLOCKSTELLE_1 = 6L;
-long TIMESTAMP_BLOCKSTELLE_2 = 8L;
-long TIMESTAMP_BLOCKSTELLE_3 = 10L;
-long TIMESTAMP_BLOCKSTELLE_4 = 12L;
-
 // LICHTSIGNALE
-byte lichtsignal_button_inputs[] = {24, 26, 28, 30, 36, 38, 27, 25, 29, 37, 35, 41, 39};
+byte lichtsignal_button_inputs[] = {24, 26, 28, 30, 36, 38, 25, 27, 29, 37, 35, 41, 39};
 bool lichtsignal_unlock_array[] = {false, true, true, true, true, true, true, true, true, true, true, true, true};
 bool lichtsignal_status_array[] = {false, false, false, false, false, false, false, false, false, false, false, false, false};
 
@@ -47,6 +38,15 @@ bool stromabschnitt_unlock_button_2 = true;
 byte stromabschnitt_1 = 0;
 byte stromabschnitt_2 = 0;
 // - STROMABSCHNITTE
+
+long timestamp_lichtsignale = 0L;
+long TIMESTAMP_STROMABSCHNITT_1 = 2L;
+long TIMESTAMP_STROMABSCHNITT_2 = 4L;
+
+long TIMESTAMP_BLOCKSTELLE_1 = 6L;
+long TIMESTAMP_BLOCKSTELLE_2 = 8L;
+long TIMESTAMP_BLOCKSTELLE_3 = 10L;
+long TIMESTAMP_BLOCKSTELLE_4 = 12L;
 
 // BLOCKSTELLEN
 bool blockstellen_unlock_button_1 = true;
@@ -77,15 +77,17 @@ void setup() {
 
 
 void loop() {
-  if (MULTIPLIER < 1 && MULTIPLIER_TIMESTAMP <= millis()) {
-    MULTIPLIER = MULTIPLIER + 0.005;
+  
+  if(MULTIPLIER < 1 && MULTIPLIER_TIMESTAMP <= millis()) {
+    MULTIPLIER = MULTIPLIER + 0.005;  
     MULTIPLIER_TIMESTAMP = millis() + 15;
   }
-
+  
   setStromabschnitt(0, 30, stromabschnitt_1);
   setStromabschnitt(31, 62, stromabschnitt_2);
   toggle(32, stromabschnitt_unlock_button_1, stromabschnitt_1, 0, 2, TIMESTAMP_STROMABSCHNITT_1);
   toggle(40, stromabschnitt_unlock_button_2, stromabschnitt_2, 0, 2, TIMESTAMP_STROMABSCHNITT_2);
+  
   toggle(34, blockstellen_unlock_button_1, blockstelle_1, 0, 1, TIMESTAMP_BLOCKSTELLE_1);
   toggle(23, blockstellen_unlock_button_2, blockstelle_2, 0, 1, TIMESTAMP_BLOCKSTELLE_2);
   toggle(31, blockstellen_unlock_button_3, blockstelle_3, 0, 1, TIMESTAMP_BLOCKSTELLE_3);
@@ -137,16 +139,16 @@ void setBlockstelle(byte from, byte to, byte status) {
 
 void setColorFromTo(byte from, byte to, byte r, byte g, byte b) {
   for (int i = from; i <= to; i++) {
-    pixels.setPixelColor(i, cor[r] * MULTIPLIER, cor[g] * MULTIPLIER, cor[b] * MULTIPLIER);
+    pixels.setPixelColor(i, round(cor[r] * MULTIPLIER), round(cor[g] * MULTIPLIER),round(cor[b] * MULTIPLIER));
   }
 }
 
 void setLichtsignal(int index, bool status) {
   if (status) {
-    lichtsignale.setPixelColor(index, 0, 254 * MULTIPLIER, 0);
+    lichtsignale.setPixelColor(index, 0, round(254 * MULTIPLIER), 0);
   }
   if (!status) {
-    lichtsignale.setPixelColor(index, 254 * MULTIPLIER, 0, 0);
+    lichtsignale.setPixelColor(index, round(254 * MULTIPLIER), 0, 0);
   }
 }
 
@@ -180,7 +182,7 @@ void toggle(byte pin, bool& unlock, byte& toggle, byte range0, byte range1, long
   if (unlock == true && digitalRead(pin) == 1) {
 
     timestamp = millis() + GLOBAL_DELAY;
-
+    
     unlock = false;
     toggle++;
     if (toggle > range1) {
